@@ -287,7 +287,10 @@ def draw_circles(image,x,y,couleur):
     Returns:
         numpy.ndarray: L'image avec les cercles dessinés.
     """
-
+    if 70 < x < 170 and 1200 < y < 1300:
+        return image
+    if 780 < x < 880 and 1200 < y < 1300:
+        return image
 
     cv2.circle(image, (int(x), int(y)), 40, couleur, -1)  # -1 pour remplir le cercle
 
@@ -517,28 +520,132 @@ carte_virtuelle=detect_cubes_in_image(warped, lo_rouge, hi_rouge, lo_gris, hi_gr
 # Créer le tableau 2D avec les lignes et les colonnes spécifiées
 maze = create_2d_array(largeur, hauteur)
 
+point_bleu = (0,0)
+point_rouge = (0,0)
+point_blanc = (0,0)
+carre_bleau = (1254,116)
+carre_rouge = (420,830)
+carre_jaune = (420,120)
+
 # Vérifier si l'image est chargée avec succès
 if carte_virtuelle is not None:
     # Coordonnées du pixel à lire (par exemple, pixel à la position (100, 100))
     for i in range(1600):
         for j in range(900):
             x, y = i, j
-            # Lire les valeurs des canaux de couleur du pixel
+
+        # Lire les valeurs des canaux de couleur du pixel
             b, g, r = carte_virtuelle[y, x]
             if r!=0 or b!=0 or g!=0:
-                maze[i][j] = 1
+                if g==200:
+                    maze[i][j] = 0
+                elif b==100:
+                    maze[i][j] = 0
+
+
+                    if 70 < j < 170 and 1200 < i < 1300:
+                        maze[i][j] = 0
+                    else:
+                        point_bleu = (int(i), int(j))
+
+                elif r==255 and b==255:
+                    maze[i][j] = 3
+                    point_blanc = (i,j)
+                elif r==255:
+                    maze[i][j] = 4
+                    point_rouge = (i,j)
+                else:
+                    maze[i][j] = 1
+            if 70 < x < 170 and 1200 < y < 1300:
+                maze[i][j] = 0
+            if 780 < x < 880 and 1200 < y < 1300:
+                maze[i][j] = 0
 
 
 
 
-
-start = (100, 80)
-end = (1200, 700)
+start = (1260, 832)
+end = point_bleu
+print("point bleu",point_bleu)
 
 path = astar(maze, start, end)
 for x,y in path :
     carte_virtuelle=draw_circles2(carte_virtuelle,x,y,(0,255,255))
 
+print(path)
+cv2.imshow('Image final!!!!!!!!!!!!', carte_virtuelle)
+
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+
+path = astar(maze, end, carre_bleau)
+for x,y in path :
+    carte_virtuelle=draw_circles2(carte_virtuelle,x,y,(0,255,150))
+
+print(path)
+cv2.imshow('Image final!!!!!!!!!!!!', carte_virtuelle)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+# Vérifier si l'image est chargée avec succès
+if carte_virtuelle is not None:
+    # Coordonnées du pixel à lire (par exemple, pixel à la position (100, 100))
+    for i in range(1600):
+        for j in range(900):
+            x, y = i, j
+
+        # Lire les valeurs des canaux de couleur du pixel
+            b, g, r = carte_virtuelle[y, x]
+            if r!=0 or b!=0 or g!=0:
+
+                if r==255 and b==255:
+                    maze[i][j] = 3
+                    point_blanc = (i,j)
+                elif r==255:
+                    maze[i][j] = 0
+                    point_rouge = (i,j)
+
+path = astar(maze, carre_bleau, point_rouge)
+for x,y in path :
+    carte_virtuelle=draw_circles2(carte_virtuelle,x,y,(0,255,255))
+
+print(path)
+path = astar(maze, point_rouge, carre_rouge)
+for x,y in path :
+    carte_virtuelle=draw_circles2(carte_virtuelle,x,y,(0,255,255))
+
+print(path)
+cv2.imshow('Image final!!!!!!!!!!!!', carte_virtuelle)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+# Vérifier si l'image est chargée avec succès
+if carte_virtuelle is not None:
+    # Coordonnées du pixel à lire (par exemple, pixel à la position (100, 100))
+    for i in range(1600):
+        for j in range(900):
+            x, y = i, j
+
+            # Lire les valeurs des canaux de couleur du pixel
+            b, g, r = carte_virtuelle[y, x]
+            if r != 0 or b != 0 or g != 0:
+
+                if r == 255 and b == 255:
+                    maze[i][j] = 0
+                    point_blanc = (i, j)
+
+
+path = astar(maze, carre_rouge, point_blanc)
+for x, y in path:
+    carte_virtuelle = draw_circles2(carte_virtuelle, x, y, (0, 255, 255))
+
+print(path)
+cv2.imshow('Image final!!!!!!!!!!!!', carte_virtuelle)
+
+path = astar(maze, point_blanc, carre_jaune)
+for x, y in path:
+    carte_virtuelle = draw_circles2(carte_virtuelle, x, y, (0, 255, 255))
 
 print(path)
 cv2.imshow('Image final!!!!!!!!!!!!', carte_virtuelle)
