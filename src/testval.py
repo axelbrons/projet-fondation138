@@ -242,6 +242,7 @@ def detect_and_draw(image, mask, label,carte_virtuelle,couleur):
         c = max(elements, key=cv2.contourArea)
         ((x, y), rayon) = cv2.minEnclosingCircle(c)
         carte_virtuelle=draw_circles(carte_virtuelle, x, y,couleur)
+        print("coordonné", x,y,label)
         if rayon > 2:
             cv2.circle(mask, (int(x), int(y)), int(rayon), (0, 255, 0), 2)
             cv2.circle(image, (int(x), int(y)), 5, (0, 255, 255), 10)
@@ -531,8 +532,8 @@ if carte_virtuelle is not None:
 
 
 
-start = (100, 100)
-end = (1400, 700)
+start = (100, 80)
+end = (1200, 700)
 
 path = astar(maze, start, end)
 for x,y in path :
