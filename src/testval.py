@@ -91,7 +91,7 @@ def trouver_id_aruco(image_path, dictionary=aruco.DICT_ARUCO_ORIGINAL):
 
 
 ##Detection des arucos
-def trouver_id_aruco2(image, dictionary=aruco.DICT_ARUCO_ORIGINAL):
+def trouver_id_aruco2(image,cartevir, dictionary=aruco.DICT_ARUCO_ORIGINAL):
   # Charger l'image
 
   # Vérifier si l'image a été chargée avec succès
@@ -160,11 +160,16 @@ def trouver_id_aruco2(image, dictionary=aruco.DICT_ARUCO_ORIGINAL):
       # Dessiner les contours et les ID des marqueurs détectés
       image_with_markers = aruco.drawDetectedMarkers(image.copy(), corners, ids)
       # Afficher l'image avec les marqueurs détectés
+      # Initialisation des variables pour stocker les coordonnées des coins
+
+
+
+
       cv2.imshow('Marqueurs ArUco', image_with_markers)
       cv2.waitKey(0)
       cv2.destroyAllWindows()
       # Retourner les IDs des marqueurs détectés
-      return ids.flatten(), coin_H_G, coin_H_D, coin_B_D, coin_B_G
+      return cartevir
   else:
       print("Aucun marqueur ArUco n'a été détecté dans l'image.")
       return None
@@ -195,8 +200,8 @@ def detect_cubes_in_image(image_path, lo_rouge, hi_rouge, lo_gris, hi_gris, lo_b
     mask_rouge = cv2.erode(mask_rouge, None, iterations=1)
     mask_rouge = cv2.dilate(mask_rouge, None, iterations=1)
    # mask_gris = cv2.erode(mask_gris, None, iterations=1)
-   # mask_gris = cv2.dilate(mask_gris, None, iterations=1)
-    #mask_bleu = cv2.erode(mask_bleu, None, iterations=1)
+    mask_gris = cv2.dilate(mask_gris, None, iterations=1)
+    #mask_bleu = cv2.erode(mask_bleu, None, iterations=2)
     #mask_bleu = cv2.dilate(mask_bleu, None, iterations=1)
     #mask_vert = cv2.erode(mask_vert, None, iterations=1)
     #mask_vert = cv2.dilate(mask_vert, None, iterations=1)
@@ -209,12 +214,16 @@ def detect_cubes_in_image(image_path, lo_rouge, hi_rouge, lo_gris, hi_gris, lo_b
     result_image = image.copy()
     image_noire = np.zeros((hauteur, largeur, 3), dtype=np.uint8)
     for i in range(30):
-        image_noire=detect_and_draw(result_image, mask_rouge, "Cube rouge",image_noire,(0,0,255))
-        image_noire=detect_and_draw(result_image, mask_gris, "Cube gris",image_noire,(150,150,150))
-        image_noire=detect_and_draw(result_image, thresholded_image, "Cube blanc",image_noire,(255,255,255))
 
+        image_noire=detect_and_draw(result_image, mask_gris, "Cube gris",image_noire,(150,150,150))
+
+
+    for i in range(30):
+        image_noire=detect_and_draw(result_image, thresholded_image, "Cube blanc",image_noire,(255,255,255))
+        image_noire = detect_and_draw(result_image, mask_rouge, "Cube rouge", image_noire, (0, 0, 255))
     for i in range(10):
         image_noire=detect_and_draw(result_image, mask_bleu, "Cube bleu",image_noire,(100,0,0))
+
 
     for i in range(3):
 
@@ -227,7 +236,7 @@ def detect_cubes_in_image(image_path, lo_rouge, hi_rouge, lo_gris, hi_gris, lo_b
     #cv2.imshow('mask_rouge', mask_rouge)
     #cv2.imshow('mask-gris', mask_gris)
     #cv2.imshow('mask_bleu', mask_bleu)
-    #cv2.imshow('mask_blanc', thresholded_image)
+    cv2.imshow('mask_blanc', thresholded_image)
     #cv2.imshow('mask_vert', mask_vert)
     #cv2.imshow('mask_jaune', mask_jaune)
     #cv2.imshow('mask_blanc', gray_image)
@@ -287,12 +296,14 @@ def draw_circles(image,x,y,couleur):
     Returns:
         numpy.ndarray: L'image avec les cercles dessinés.
     """
-    if 70 < x < 170 and 1200 < y < 1300:
+    if 70 < y < 170 and 1200 < x < 1300:
         return image
-    if 780 < x < 880 and 1200 < y < 1300:
+    elif 780 < y < 880 and 1200 < x < 1300:
         return image
-
-    cv2.circle(image, (int(x), int(y)), 40, couleur, -1)  # -1 pour remplir le cercle
+    else:
+        cv2.circle(image, (int(x), int(y)), 18, couleur, -1)  # -1 pour remplir le cercle
+        #cv2.rectangle(image, (int(x)+20, int(y)+20), (int(x)-20, int(y)-20), couleur, -1)
+        #print("coordonné", x, y, couleur)
 
     return image
 def draw_circles2(image,x,y,couleur):
@@ -308,7 +319,6 @@ def draw_circles2(image,x,y,couleur):
     Returns:
         numpy.ndarray: L'image avec les cercles dessinés.
     """
-
 
     cv2.circle(image, (int(x), int(y)), 5, couleur, -1)  # -1 pour remplir le cercle
 
@@ -428,7 +438,8 @@ chemin_image = "..\\img\\carte3.jpg"
 chemin_image1 = "..\\img\\carte4.jpg"
 chemin_image2 = "..\\img\\carte5.jpg"
 chemin_image3 = "..\\img\\carte9.jpg"
-
+chemin_image4 = "..\\img\\carte7.jpg"
+chemin_image5 = "..\\img\\carte9.jpg"
 
 
 
@@ -491,7 +502,7 @@ if ids_marqueurs is not None:
 lo_rouge = np.array([0,100,100])
 hi_rouge = np.array([10,255,255])
 lo_gris = np.array([70,70,70])
-hi_gris = np.array([150,150,150])
+hi_gris = np.array([120,120,120])
 #lo_bleu = np.array([bleu_ciel_low])
 #hi_bleu = np.array([bleu_ciel_high])
 #lo_vert = np.array([vert_low])
@@ -513,7 +524,7 @@ color_infos=(0,255,255)
 carte_virtuelle=detect_cubes_in_image(warped, lo_rouge, hi_rouge, lo_gris, hi_gris, lo_bleu, hi_bleu, lo_vert, hi_vert, lo_jaune,
                       hi_jaune, lo_blanc, hi_blanc)
 
-#ids_marqueurs, coin_H_G, coin_H_D, coin_B_D, coin_B_G = trouver_id_aruco2(warped)
+#carte_virtuelle = trouver_id_aruco2(warped,carte_virtuelle)
 
 
 
@@ -543,10 +554,8 @@ if carte_virtuelle is not None:
                     maze[i][j] = 0
 
 
-                    if 70 < j < 170 and 1200 < i < 1300:
-                        maze[i][j] = 0
-                    else:
-                        point_bleu = (int(i), int(j))
+
+                    point_bleu = (int(i)-20, int(j))
 
                 elif r==255 and b==255:
                     maze[i][j] = 3
@@ -567,6 +576,8 @@ if carte_virtuelle is not None:
 start = (1260, 832)
 end = point_bleu
 print("point bleu",point_bleu)
+
+
 
 path = astar(maze, start, end)
 for x,y in path :
@@ -604,16 +615,20 @@ if carte_virtuelle is not None:
                     point_blanc = (i,j)
                 elif r==255:
                     maze[i][j] = 0
-                    point_rouge = (i,j)
+                    point_rouge = (i-20,j)
 
 path = astar(maze, carre_bleau, point_rouge)
 for x,y in path :
     carte_virtuelle=draw_circles2(carte_virtuelle,x,y,(0,255,255))
 
+cv2.imshow('Image final!!!!!!!!!!!!', carte_virtuelle)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
 print(path)
 path = astar(maze, point_rouge, carre_rouge)
 for x,y in path :
-    carte_virtuelle=draw_circles2(carte_virtuelle,x,y,(0,255,255))
+    carte_virtuelle=draw_circles2(carte_virtuelle,x,y,(0,255,150))
 
 print(path)
 cv2.imshow('Image final!!!!!!!!!!!!', carte_virtuelle)
@@ -633,19 +648,24 @@ if carte_virtuelle is not None:
 
                 if r == 255 and b == 255:
                     maze[i][j] = 0
-                    point_blanc = (i, j)
-
+                    point_blanc = (i-20, j)
+                elif r==255:
+                    maze[i][j] = 4
+                    point_rouge = (i,j)
 
 path = astar(maze, carre_rouge, point_blanc)
 for x, y in path:
-    carte_virtuelle = draw_circles2(carte_virtuelle, x, y, (0, 255, 255))
+        carte_virtuelle = draw_circles2(carte_virtuelle, x, y, (0, 255, 255))
 
 print(path)
 cv2.imshow('Image final!!!!!!!!!!!!', carte_virtuelle)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
 
 path = astar(maze, point_blanc, carre_jaune)
 for x, y in path:
-    carte_virtuelle = draw_circles2(carte_virtuelle, x, y, (0, 255, 255))
+    carte_virtuelle = draw_circles2(carte_virtuelle, x, y, (0, 255, 150))
 
 print(path)
 cv2.imshow('Image final!!!!!!!!!!!!', carte_virtuelle)
