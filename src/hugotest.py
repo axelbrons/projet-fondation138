@@ -1,23 +1,98 @@
-
-
 import cv2
 import numpy as np
 import cv2.aruco as aruco
 import sys
 
 
-
-
-
-
 ##Detection des arucos
 def trouver_id_aruco(image_path, dictionary=aruco.DICT_ARUCO_ORIGINAL):
   # Charger l'image
-  image = cv2.imread(image_path)
+  image = image_path
+  cv2.imshow('Detected Cubes', image_path)
+  cv2.waitKey(0)
   # Vérifier si l'image a été chargée avec succès
   if image is None:
       print(f"Erreur : Impossible de charger l'image à partir de {image_path}")
       sys.exit()
+  # Convertir l'image en niveaux de gris
+  image_grayscale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+  # Obtenir le dictionnaire ArUco prédéfini
+  aruco_dict = aruco.getPredefinedDictionary(dictionary)
+  # Initialiser les paramètres du détecteur ArUco
+  parameters = aruco.DetectorParameters()
+  # Détecter les coins des marqueurs
+  corners, ids, _ = aruco.detectMarkers(image_grayscale, aruco_dict, parameters=parameters)
+  # Identifiez les marqueurs correspondant aux coins de la carte (par exemple, avec les ID 0, 1, 2 et 3)
+  corner_ids = [0, 1, 2, 3]
+  corner_markers = [marker for marker, marker_id in zip(corners, ids) if marker_id in corner_ids]
+  # Extraire les coordonnées des coins des marqueurs identifiés
+  corner_coordinates = []
+  for marker, marker_id in zip(corners, ids):
+      # Si l'ID du marqueur est 0, stocker les coordonnées du coin en haut à gauche
+      if marker_id == 0:
+          coin_H_G = marker[0][0]  # Coin en haut à gauche
+      # Si l'ID du marqueur est 1, stocker les coordonnées du coin en haut à droite
+      elif marker_id == 1:          coin_H_D = marker[0][1]  # Coin en haut à droite
+      # Si l'ID du marqueur est 2, stocker les coordonnées du coin en bas à droite
+      elif marker_id == 2:
+          coin_B_D = marker[0][2]  # Coin en bas à droite
+      # Si l'ID du marqueur est 3, stocker les coordonnées du coin en bas à gauche
+      elif marker_id == 3:
+          coin_B_G = marker[0][3]  # Coin en bas à gauche
+      for corner in marker[0]:
+          corner_coordinates.append(corner)
+  ## Afficher les coordonnées des coins
+  #print("Coordonnées des coins des marqueurs ArUco identifiés comme des coins de la carte :")
+  #for corner in corner_coordinates:
+  #    print(corner)
+  # Afficher les coordonnées du coin en haut à gauche si le marqueur avec ID 0 a été détecté
+  if coin_H_G is not None:
+      print("Coordonnées du coin en haut à gauche du marqueur ArUco avec ID 0 :", coin_H_G)
+      coin_H_G -= 15
+      print("Coordonnées du coin en haut à gauche du marqueur ArUco avec ID 0 :", coin_H_G)
+  print("")
+  # Afficher les coordonnées du coin en haut à droite si le marqueur avec ID 1 a été détecté
+  if coin_H_D is not None:
+      print("Coordonnées du coin en haut à droite du marqueur ArUco avec ID 1 :", coin_H_D)
+      coin_H_D[0] += 15
+      coin_H_D[1] -= 15
+      print("Coordonnées du coin en haut à droite du marqueur ArUco avec ID 1 :", coin_H_D)
+  print("")
+  # Afficher les coordonnées du coin en bas à droite si le marqueur avec ID 2 a été détecté
+  if coin_B_D is not None:
+      print("Coordonnées du coin en bas à droite du marqueur ArUco avec ID 2 :", coin_B_D)
+      coin_B_D += 5
+      print("Coordonnées du coin en bas à droite du marqueur ArUco avec ID 2 :", coin_B_D)
+  print("")
+  # Afficher les coordonnées du coin en bas à gauche si le marqueur avec ID 3 a été détecté
+  if coin_B_G is not None:
+      print("Coordonnées du coin en bas à gauche du marqueur ArUco avec ID 3 :", coin_B_G)
+      coin_B_G[0] -= 5
+      coin_B_G[1] += 5
+      print("Coordonnées du coin en bas à gauche du marqueur ArUco avec ID 3 :", coin_B_G)
+  print("")
+  if ids is not None:
+      # Dessiner les contours et les ID des marqueurs détectés
+      image_with_markers = aruco.drawDetectedMarkers(image.copy(), corners, ids)
+      # Afficher l'image avec les marqueurs détectés
+      cv2.imshow('Marqueurs ArUco', image_with_markers)
+      cv2.waitKey(0)
+      cv2.destroyAllWindows()
+      # Retourner les IDs des marqueurs détectés
+      return ids.flatten(), coin_H_G, coin_H_D, coin_B_D, coin_B_G
+  else:
+      print("Aucun marqueur ArUco n'a été détecté dans l'image.")
+      return None
+
+
+##Detection des arucos
+def trouver_id_aruco2(image,cartevir, dictionary=aruco.DICT_ARUCO_ORIGINAL):
+  # Charger l'image
+
+  # Vérifier si l'image a été chargée avec succès
+  coin_H_D = None
+  coin_B_D = None
+  coin_B_G = None
   # Convertir l'image en niveaux de gris
   image_grayscale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
   # Obtenir le dictionnaire ArUco prédéfini
@@ -80,51 +155,12 @@ def trouver_id_aruco(image_path, dictionary=aruco.DICT_ARUCO_ORIGINAL):
       # Dessiner les contours et les ID des marqueurs détectés
       image_with_markers = aruco.drawDetectedMarkers(image.copy(), corners, ids)
       # Afficher l'image avec les marqueurs détectés
-      cv2.imshow('Marqueurs ArUco', image_with_markers)
-      cv2.waitKey(0)
-      cv2.destroyAllWindows()
-      # Retourner les IDs des marqueurs détectés
-      return ids.flatten(), coin_H_G, coin_H_D, coin_B_D, coin_B_G
-  else:
-      print("Aucun marqueur ArUco n'a été détecté dans l'image.")
-      return None
-
-
-##Detection des arucos
-def trouver_id_aruco2(image,cartevir, dictionary=aruco.DICT_ARUCO_ORIGINAL):
-  # Charger l'image
-
-  # Vérifier si l'image a été chargée avec succès
-  coin_H_D = None
-  coin_B_D = None
-  coin_B_G = None
-  # Convertir l'image en niveaux de gris
-  image_grayscale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-  # Obtenir le dictionnaire ArUco prédéfini
-  aruco_dict = aruco.getPredefinedDictionary(dictionary)
-  # Initialiser les paramètres du détecteur ArUco
-  parameters = aruco.DetectorParameters()
-  # Détecter les coins des marqueurs
-  corners, ids, _ = aruco.detectMarkers(image_grayscale, aruco_dict, parameters=parameters)
-  # Identifiez les marqueurs correspondant aux coins de la carte (par exemple, avec les ID 0, 1, 2 et 3)
-  corner_ids = [0, 1, 2, 3]
-  corner_markers = [marker for marker, marker_id in zip(corners, ids) if marker_id in corner_ids]
-  # Extraire les coordonnées des coins des marqueurs identifiés
-  corner_coordinates = []
-
-
-  if ids is not None:
-      # Dessiner les contours et les ID des marqueurs détectés
-      image_with_markers = aruco.drawDetectedMarkers(image.copy(), corners, ids)
-      cartevir = aruco.drawDetectedMarkers(cartevir, corners, ids)
-      # Afficher l'image avec les marqueurs détectés
       # Initialisation des variables pour stocker les coordonnées des coins
 
 
 
 
       cv2.imshow('Marqueurs ArUco', image_with_markers)
-      cv2.imshow('haaaaaaaaa', cartevir)
       cv2.waitKey(0)
       cv2.destroyAllWindows()
       # Retourner les IDs des marqueurs détectés
@@ -172,36 +208,37 @@ def detect_cubes_in_image(image_path, lo_rouge, hi_rouge, lo_gris, hi_gris, lo_b
     # Détecter les contours et dessiner les objets détectés
     result_image = image.copy()
     image_noire = np.zeros((hauteur, largeur, 3), dtype=np.uint8)
-    for i in range(10):
-
-        image_noire=detect_and_draw(result_image, mask_gris, "Cube gris",image_noire,(150,150,150))
+    for i in range(30):
+        image_noire = detect_and_draw(result_image, mask_gris, "Cube gris", image_noire, (150, 150, 150))
+        image_noire=detect_and_draw(result_image, thresholded_image, "Cube blanc",image_noire,(255,255,255))
 
 
     for i in range(30):
-        image_noire=detect_and_draw(result_image, thresholded_image, "Cube blanc",image_noire,(255,255,255))
+        #image_noire=detect_and_draw(result_image, thresholded_image, "Cube blanc",image_noire,(255,255,255))
+
         image_noire = detect_and_draw(result_image, mask_rouge, "Cube rouge", image_noire, (0, 0, 255))
     for i in range(5):
         image_noire=detect_and_draw(result_image, mask_bleu, "Cube bleu",image_noire,(100,0,0))
 
 
-    for i in range(3):
+   # for i in range(3):
 
-        image_noire=detect_and_draw(result_image, mask_vert, "Cube vert",image_noire,(0,200,0))
+        #image_noire=detect_and_draw(result_image, mask_vert, "Cube vert",image_noire,(0,200,0))
         #image_noire=detect_and_draw(result_image, mask_jaune, "Cube jaune",image_noire,(30,255,255))
 
 
     # Afficher l'image avec les objets détectés
     cv2.imshow('Detected Cubes', result_image)
     #cv2.imshow('mask_rouge', mask_rouge)
-    #cv2.imshow('mask-gris', mask_gris)
+    cv2.imshow('mask-gris', mask_gris)
     #cv2.imshow('mask_bleu', mask_bleu)
-    #cv2.imshow('mask_blanc', thresholded_image)
+    cv2.imshow('mask_blanc', thresholded_image)
     #cv2.imshow('mask_vert', mask_vert)
     #cv2.imshow('mask_jaune', mask_jaune)
-    #cv2.imshow('mask_blanc', gray_image)
-    #cv2.imshow('noir', image_noire)
-    #cv2.waitKey(0)
-    #cv2.destroyAllWindows()
+    cv2.imshow('mask_blanc', gray_image)
+    cv2.imshow('noir', image_noire)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
     return image_noire
 
 def detect_and_draw(image, mask, label,carte_virtuelle,couleur):
@@ -393,14 +430,6 @@ def astar(maze, start, end):
     raise RuntimeError("A* failed to find a solution")
 
 
-# Chemin vers votre image contenant le marqueur ArUco
-chemin_image = "..\\img\\carte3.jpg"
-chemin_image1 = "..\\img\\carte4.jpg"
-chemin_image2 = "..\\img\\carte5.jpg"
-chemin_image3 = "..\\img\\carte9.jpg"
-chemin_image4 = "..\\img\\carte7.jpg"
-chemin_image5 = "..\\img\\carte9.jpg"
-
 
 
 
@@ -409,60 +438,13 @@ chemin_image5 = "..\\img\\carte9.jpg"
 largeur = 1680
 hauteur = 945
 
-
-
-
-
-
-# Appeler la fonction pour trouver l'ID du marqueur ArUco
-ids_marqueurs, coin_H_G, coin_H_D, coin_B_D, coin_B_G = trouver_id_aruco(chemin_image1)
-image1 = cv2.imread(chemin_image1)
-pts1 = np.float32([coin_H_G, coin_H_D, coin_B_D, coin_B_G])
-pts2 = np.float32([[0, 0], [largeur, 0], [largeur, hauteur], [0, hauteur]])
-M = cv2.getPerspectiveTransform(pts1, pts2)
-warped = cv2.warpPerspective(image1, M, (largeur, hauteur))
-
-jaune_high = get_rgb_color_high(warped, 145, 932)
-jaune_low = get_rgb_color_low(warped, 145, 932)
-
-bleu_ciel_high = get_rgb_color_high(warped, 195, 932)
-bleu_ciel_low = get_rgb_color_low(warped, 195, 932)
-
-vert_high = get_rgb_color_high(warped, 245, 932)
-vert_low = get_rgb_color_low(warped, 245, 932)
-
-rose_high = get_rgb_color_high(warped, 295, 932)
-rose_low = get_rgb_color_low(warped, 295, 932)
-
-rouge_high = get_rgb_color_high(warped, 345, 932)
-rouge_low = get_rgb_color_low(warped, 345, 932)
-
-bleu_marine_high = get_rgb_color_high(warped, 395, 932)
-bleu_marine_low = get_rgb_color_low(warped, 395, 932)
-
-noir_high = get_rgb_color_high(warped, 445, 932)
-noir_low = get_rgb_color_low(warped, 445, 932)
-
-
-# Appeler la fonction de calibrage des blancs avec le chemin spécifié
-#calibrer_blancs(warped)
-cv2.imshow('Image calibrée', warped)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-
-
-# Afficher les IDs des marqueurs détectés
-
-if ids_marqueurs is not None:
-  print("IDs des marqueurs détectés :", ids_marqueurs)
-
 # Paramètres HSV pour les différentes couleurs
 #lo_rouge = np.array([rouge_low])
 #hi_rouge = np.array([rouge_high])
 lo_rouge = np.array([0,100,100])
 hi_rouge = np.array([10,255,255])
-lo_gris = np.array([70,70,70])
-hi_gris = np.array([120,120,120])
+lo_gris = np.array([45,45,45])
+hi_gris = np.array([90,90,90])
 #lo_bleu = np.array([bleu_ciel_low])
 #hi_bleu = np.array([bleu_ciel_high])
 #lo_vert = np.array([vert_low])
@@ -475,25 +457,10 @@ lo_vert = np.array([40,40,40])
 hi_vert = np.array([80,255,255])
 lo_jaune = np.array([20,100,100])
 hi_jaune = np.array([30,255,255])
-lo_blanc = np.array([200,200,200])
+lo_blanc = np.array([140,140,140])
 hi_blanc = np.array([255,255,255])
 color_infos=(0,255,255)
 
-
-# Appeler la fonction pour la détection des cubes dans l'image
-carte_virtuelle=detect_cubes_in_image(warped, lo_rouge, hi_rouge, lo_gris, hi_gris, lo_bleu, hi_bleu, lo_vert, hi_vert, lo_jaune,
-                      hi_jaune, lo_blanc, hi_blanc)
-
-cv2.imshow("haaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",carte_virtuelle)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-
-carte_virtuelle = trouver_id_aruco2(warped,carte_virtuelle)
-
-
-
-# Créer le tableau 2D avec les lignes et les colonnes spécifiées
-maze = create_2d_array(largeur, hauteur)
 
 point_bleu = (0,0)
 point_rouge = (0,0)
@@ -502,137 +469,195 @@ carre_bleau = (1254,116)
 carre_rouge = (420,830)
 carre_jaune = (420,120)
 
-# Vérifier si l'image est chargée avec succès
-if carte_virtuelle is not None:
-    # Coordonnées du pixel à lire (par exemple, pixel à la position (100, 100))
-    for i in range(1600):
-        for j in range(900):
-            x, y = i, j
+color_info=(0,255,255)
+cap = cv2.VideoCapture(1,cv2.CAP_DSHOW)
 
-        # Lire les valeurs des canaux de couleur du pixel
-            b, g, r = carte_virtuelle[y, x]
-            if r!=0 or b!=0 or g!=0:
-                if g==200:
+while True:
+    ret, frame=cap.read()
+    chemin_image1= frame
+
+    # Appeler la fonction pour trouver l'ID du marqueur ArUco
+    ids_marqueurs, coin_H_G, coin_H_D, coin_B_D, coin_B_G = trouver_id_aruco(chemin_image1)
+    image1 = frame
+    pts1 = np.float32([coin_H_G, coin_H_D, coin_B_D, coin_B_G])
+    pts2 = np.float32([[0, 0], [largeur, 0], [largeur, hauteur], [0, hauteur]])
+    M = cv2.getPerspectiveTransform(pts1, pts2)
+    warped = cv2.warpPerspective(image1, M, (largeur, hauteur))
+
+    jaune_high = get_rgb_color_high(warped, 145, 932)
+    jaune_low = get_rgb_color_low(warped, 145, 932)
+
+    bleu_ciel_high = get_rgb_color_high(warped, 195, 932)
+    bleu_ciel_low = get_rgb_color_low(warped, 195, 932)
+
+    vert_high = get_rgb_color_high(warped, 245, 932)
+    vert_low = get_rgb_color_low(warped, 245, 932)
+
+    rose_high = get_rgb_color_high(warped, 295, 932)
+    rose_low = get_rgb_color_low(warped, 295, 932)
+
+    rouge_high = get_rgb_color_high(warped, 345, 932)
+    rouge_low = get_rgb_color_low(warped, 345, 932)
+
+    bleu_marine_high = get_rgb_color_high(warped, 395, 932)
+    bleu_marine_low = get_rgb_color_low(warped, 395, 932)
+
+    noir_high = get_rgb_color_high(warped, 445, 932)
+    noir_low = get_rgb_color_low(warped, 445, 932)
+
+    # Appeler la fonction de calibrage des blancs avec le chemin spécifié
+    # calibrer_blancs(warped)
+    cv2.imshow('Image calibrée', warped)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+    # Afficher les IDs des marqueurs détectés
+
+    if ids_marqueurs is not None:
+        print("IDs des marqueurs détectés :", ids_marqueurs)
+
+    # Appeler la fonction pour la détection des cubes dans l'image
+    carte_virtuelle = detect_cubes_in_image(warped, lo_rouge, hi_rouge, lo_gris, hi_gris, lo_bleu, hi_bleu, lo_vert,
+                                            hi_vert, lo_jaune,
+                                            hi_jaune, lo_blanc, hi_blanc)
+
+    # carte_virtuelle = trouver_id_aruco2(warped,carte_virtuelle)
+
+    # Créer le tableau 2D avec les lignes et les colonnes spécifiées
+    maze = create_2d_array(largeur, hauteur)
+
+    # Vérifier si l'image est chargée avec succès
+    if carte_virtuelle is not None:
+        # Coordonnées du pixel à lire (par exemple, pixel à la position (100, 100))
+        for i in range(1600):
+            for j in range(900):
+                x, y = i, j
+
+                # Lire les valeurs des canaux de couleur du pixel
+                b, g, r = carte_virtuelle[y, x]
+                if r != 0 or b != 0 or g != 0:
+                    if g == 200:
+                        maze[i][j] = 0
+                    elif b == 100:
+                        maze[i][j] = 0
+
+                        point_bleu = (int(i), int(j))
+
+                    elif r == 255 and b == 255:
+                        maze[i][j] = 3
+                        point_blanc = (i, j)
+                    elif r == 255:
+                        maze[i][j] = 4
+                        point_rouge = (i, j)
+                    else:
+                        maze[i][j] = 1
+                if 70 < x < 170 and 1200 < y < 1300:
                     maze[i][j] = 0
-                elif b==100:
+                if 780 < x < 880 and 1200 < y < 1300:
                     maze[i][j] = 0
 
+    start = (1260, 832)
+    end = point_bleu
+    print("point bleu", point_bleu)
 
-
-                    point_bleu = (int(i), int(j))
-
-                elif r==255 and b==255:
-                    maze[i][j] = 3
-                    point_blanc = (i,j)
-                elif r==255:
-                    maze[i][j] = 4
-                    point_rouge = (i,j)
-                else:
-                    maze[i][j] = 1
-            if 70 < x < 170 and 1200 < y < 1300:
-                maze[i][j] = 0
-            if 780 < x < 880 and 1200 < y < 1300:
-                maze[i][j] = 0
-
-
-
-
-start = (1260, 832)
-end = point_bleu
-print("point bleu",point_bleu)
-
-
-
-path = astar(maze, start, end)
-for x,y in path :
-    carte_virtuelle=draw_circles2(carte_virtuelle,x,y,(0,255,255))
-
-print(path)
-cv2.imshow('Image final!!!!!!!!!!!!', carte_virtuelle)
-
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-
-
-path = astar(maze, end, carre_bleau)
-for x,y in path :
-    carte_virtuelle=draw_circles2(carte_virtuelle,x,y,(0,255,150))
-
-print(path)
-cv2.imshow('Image final!!!!!!!!!!!!', carte_virtuelle)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-
-# Vérifier si l'image est chargée avec succès
-if carte_virtuelle is not None:
-    # Coordonnées du pixel à lire (par exemple, pixel à la position (100, 100))
-    for i in range(1600):
-        for j in range(900):
-            x, y = i, j
-
-        # Lire les valeurs des canaux de couleur du pixel
-            b, g, r = carte_virtuelle[y, x]
-            if r!=0 or b!=0 or g!=0:
-
-                if r==255 and b==255:
-                    maze[i][j] = 3
-                    point_blanc = (i,j)
-                elif r==255:
-                    maze[i][j] = 0
-                    point_rouge = (i,j)
-
-path = astar(maze, carre_bleau, point_rouge)
-for x,y in path :
-    carte_virtuelle=draw_circles2(carte_virtuelle,x,y,(0,255,255))
-
-cv2.imshow('Image final!!!!!!!!!!!!', carte_virtuelle)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-
-print(path)
-path = astar(maze, point_rouge, carre_rouge)
-for x,y in path :
-    carte_virtuelle=draw_circles2(carte_virtuelle,x,y,(0,255,150))
-
-print(path)
-cv2.imshow('Image final!!!!!!!!!!!!', carte_virtuelle)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-
-# Vérifier si l'image est chargée avec succès
-if carte_virtuelle is not None:
-    # Coordonnées du pixel à lire (par exemple, pixel à la position (100, 100))
-    for i in range(1600):
-        for j in range(900):
-            x, y = i, j
-
-            # Lire les valeurs des canaux de couleur du pixel
-            b, g, r = carte_virtuelle[y, x]
-            if r != 0 or b != 0 or g != 0:
-
-                if r == 255 and b == 255:
-                    maze[i][j] = 0
-                    point_blanc = (i, j)
-                elif r==255:
-                    maze[i][j] = 4
-                    point_rouge = (i,j)
-
-path = astar(maze, carre_rouge, point_blanc)
-for x, y in path:
+    path = astar(maze, start, end)
+    for x, y in path:
         carte_virtuelle = draw_circles2(carte_virtuelle, x, y, (0, 255, 255))
 
-print(path)
-cv2.imshow('Image final!!!!!!!!!!!!', carte_virtuelle)
-cv2.waitKey(0)
+    print(path)
+    cv2.imshow('Image final!!!!!!!!!!!!', carte_virtuelle)
+
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+    path = astar(maze, end, carre_bleau)
+    for x, y in path:
+        carte_virtuelle = draw_circles2(carte_virtuelle, x, y, (0, 255, 150))
+
+    print(path)
+    cv2.imshow('Image final!!!!!!!!!!!!', carte_virtuelle)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+    # Vérifier si l'image est chargée avec succès
+    if carte_virtuelle is not None:
+        # Coordonnées du pixel à lire (par exemple, pixel à la position (100, 100))
+        for i in range(1600):
+            for j in range(900):
+                x, y = i, j
+
+                # Lire les valeurs des canaux de couleur du pixel
+                b, g, r = carte_virtuelle[y, x]
+                if r != 0 or b != 0 or g != 0:
+
+                    if r == 255 and b == 255:
+                        maze[i][j] = 3
+                        point_blanc = (i, j)
+                    elif r == 255:
+                        maze[i][j] = 0
+                        point_rouge = (i, j)
+
+    path = astar(maze, carre_bleau, point_rouge)
+    for x, y in path:
+        carte_virtuelle = draw_circles2(carte_virtuelle, x, y, (0, 255, 255))
+
+    cv2.imshow('Image final!!!!!!!!!!!!', carte_virtuelle)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+    print(path)
+    path = astar(maze, point_rouge, carre_rouge)
+    for x, y in path:
+        carte_virtuelle = draw_circles2(carte_virtuelle, x, y, (0, 255, 150))
+
+    print(path)
+    cv2.imshow('Image final!!!!!!!!!!!!', carte_virtuelle)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+    # Vérifier si l'image est chargée avec succès
+    if carte_virtuelle is not None:
+        # Coordonnées du pixel à lire (par exemple, pixel à la position (100, 100))
+        for i in range(1600):
+            for j in range(900):
+                x, y = i, j
+
+                # Lire les valeurs des canaux de couleur du pixel
+                b, g, r = carte_virtuelle[y, x]
+                if r != 0 or b != 0 or g != 0:
+
+                    if r == 255 and b == 255:
+                        maze[i][j] = 0
+                        point_blanc = (i, j)
+                    elif r == 255:
+                        maze[i][j] = 4
+                        point_rouge = (i, j)
+
+    path = astar(maze, carre_rouge, point_blanc)
+    for x, y in path:
+        carte_virtuelle = draw_circles2(carte_virtuelle, x, y, (0, 255, 255))
+
+    print(path)
+    cv2.imshow('Image final!!!!!!!!!!!!', carte_virtuelle)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+    path = astar(maze, point_blanc, carre_jaune)
+    for x, y in path:
+        carte_virtuelle = draw_circles2(carte_virtuelle, x, y, (0, 255, 150))
+
+    print(path)
+    cv2.imshow('Image final!!!!!!!!!!!!', carte_virtuelle)
+
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+
+
+
+    if cv2.waitKey(1)==ord('q'):
+        break
+cap.release()
 cv2.destroyAllWindows()
 
 
-path = astar(maze, point_blanc, carre_jaune)
-for x, y in path:
-    carte_virtuelle = draw_circles2(carte_virtuelle, x, y, (0, 255, 150))
-
-print(path)
-cv2.imshow('Image final!!!!!!!!!!!!', carte_virtuelle)
-
-cv2.waitKey(0)
-cv2.destroyAllWindows()

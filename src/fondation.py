@@ -466,21 +466,33 @@ chemin_image = "..\\img\\carte3.jpg"
 
 
 
-######################################################## Code Hugo pour détecter les formes !!!!!!!!!! ##################################################################
+######################################################### Code Hugo pour détecter les formes !!!!!!!!!! ##################################################################
 
 
 import cv2
 import numpy as np
+import cv2.aruco as aruco
+import sys
+import math
+from matplotlib.pyplot import *
 
+
+
+
+
+
+
+# Chemin vers votre image contenant le marqueur ArUco
 chemin_image = "..\\img\\carte3.jpg"
 chemin_image1 = "..\\img\\carte4.jpg"
 chemin_image2 = "..\\img\\carte5.jpg"
 chemin_image3 = "..\\img\\carte9.jpg"
 
+# les bases de couleurs pour détecter les cubes
 lo_rouge = np.array([0,100,100])
 hi_rouge = np.array([10,255,255])
-lo_gris = np.array([50,50,50])
-hi_gris = np.array([150,150,150])
+lo_gris = np.array([90,90,90])
+hi_gris = np.array([115,115,115])
 lo_bleu = np.array([100,100,100])
 hi_bleu = np.array([130,200,200])
 lo_vert = np.array([40,40,40])
@@ -491,13 +503,16 @@ lo_blanc = np.array([200,200,200])
 hi_blanc = np.array([255,255,255])
 
 color_infos=(0,255,255)
-cap= cv2.imread(chemin_image)
+
+
+#cap= cv2.imread(chemin_image)
+cap = cv2.VideoCapture(0)
 
 
 while True:
-    #ret, frame = cap.read()
-    image = cv2.cvtColor(cap, cv2.COLOR_BGR2HSV)
-    gray_image = cv2.cvtColor(cap, cv2.COLOR_BGR2GRAY)
+    ret, frame = cap.read()
+    image = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    gray_image = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     mask = cv2.inRange(image, lo_rouge, hi_rouge)
     mask_gris = cv2.inRange(image, lo_gris, hi_gris)
     mask_bleu = cv2.inRange(image, lo_bleu, hi_bleu)
@@ -505,7 +520,10 @@ while True:
     mask_jaune = cv2.inRange(image, lo_jaune, hi_jaune)
     mask_blanc = cv2.inRange(image, lo_blanc, hi_blanc)
     ### pour le blanc
-    _, thresholded_image = cv2.threshold(gray_image, 240, 255, cv2.THRESH_BINARY)
+    _, thresholded_image = cv2.threshold(gray_image, 230, 255, cv2.THRESH_BINARY)
+
+
+
 
     mask = cv2.erode(mask,None,iterations=3)
     mask = cv2.dilate(mask,None, iterations=3)
@@ -515,6 +533,8 @@ while True:
     #mask_bleu = cv2.dilate(mask_bleu, None, iterations=4)
     #mask_jaune = cv2.erode(mask_jaune, None, iterations=1)
     #mask_jaune = cv2.dilate(mask_jaune, None, iterations=1)
+    thresholded_image = cv2.erode(thresholded_image, None, iterations=3)
+    thresholded_image = cv2.dilate(thresholded_image, None, iterations=3)
 
     image2 = cv2.bitwise_and(cap,cap,mask=mask)
     image_gris = cv2.bitwise_and(cap,cap,mask=mask_gris)
@@ -522,7 +542,7 @@ while True:
     image_blanc = cv2.bitwise_and(cap, cap, mask=thresholded_image)
     image_vert = cv2.bitwise_and(cap, cap, mask=mask_vert)
     image_jaune = cv2.bitwise_and(cap, cap, mask=mask_jaune)
-    image_blanc2 = cv2.bitwise_and(cap, cap, mask=mask_blanc)
+    #image_blanc2 = cv2.bitwise_and(cap, cap, mask=mask_blanc)
 
     ## ecrit et detecte ou ce trouve les différents cubes trouvés
     elements_jaune = cv2.findContours(mask_jaune, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
@@ -536,16 +556,16 @@ while True:
             cv2.putText(cap, "carre jaune", (int(x) + 10, int(y) - 10), cv2.FONT_HERSHEY_DUPLEX, 1, color_infos, 1,
                         cv2.LINE_AA)
 
-    elements_blanc2 = cv2.findContours(mask_blanc, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
-    if len(elements_blanc2) > 0:
-        c = max(elements_blanc2, key=cv2.contourArea)
-        ((x, y), rayon) = cv2.minEnclosingCircle(c)
-        if rayon > 10:
-            cv2.circle(image_blanc, (int(x), int(y)), int(rayon), color_infos, 2)
-            cv2.circle(cap, (int(x), int(y)), 5, color_infos, 10)
-            cv2.line(cap, (int(x), int(y)), (int(x) + 150, int(y)), color_infos, 2)
-            cv2.putText(cap, "carre blanc", (int(x) + 10, int(y) - 10), cv2.FONT_HERSHEY_DUPLEX, 1, color_infos, 1,
-                        cv2.LINE_AA)
+    #elements_blanc2 = cv2.findContours(mask_blanc, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
+    #if len(elements_blanc2) > 0:
+    #    c = max(elements_blanc2, key=cv2.contourArea)
+    #    ((x, y), rayon) = cv2.minEnclosingCircle(c)
+    #    if rayon > 10:
+    #        cv2.circle(image_blanc, (int(x), int(y)), int(rayon), color_infos, 2)
+    #        cv2.circle(cap, (int(x), int(y)), 5, color_infos, 10)
+    #        cv2.line(cap, (int(x), int(y)), (int(x) + 150, int(y)), color_infos, 2)
+    #        cv2.putText(cap, "carre blanc", (int(x) + 10, int(y) - 10), cv2.FONT_HERSHEY_DUPLEX, 1, color_infos, 1,
+    #                    cv2.LINE_AA)
 
     elements = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
     if len(elements)> 0:
@@ -583,12 +603,14 @@ while True:
     if len(elements_blanc) > 0:
         c = max(elements_blanc, key=cv2.contourArea)
         ((x, y), rayon) = cv2.minEnclosingCircle(c)
-        if rayon > 10:
+
+        if 20.0 > rayon > 5.0 :
             cv2.circle(image_blanc, (int(x), int(y)), int(rayon), color_infos, 2)
             cv2.circle(cap, (int(x), int(y)), 5, color_infos, 10)
             cv2.line(cap, (int(x), int(y)), (int(x) + 150, int(y)), color_infos, 2)
             cv2.putText(cap, "cube blanc", (int(x) + 10, int(y) - 10), cv2.FONT_HERSHEY_DUPLEX, 1, color_infos, 1,
                         cv2.LINE_AA)
+
     elements_vert = cv2.findContours(mask_vert, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
     if len(elements_vert) > 0:
         c = max(elements_vert, key=cv2.contourArea)
@@ -602,19 +624,22 @@ while True:
 
 
     cv2.imshow('Camera', cap)
-    #cv2.imshow('image2', image2)
+    #cv2.imshow('image2', image)
     #cv2.imshow('mask', mask)
-    cv2.imshow('mask-gris', mask_gris)
+    #cv2.imshow('mask-gris', mask_gris)
     #cv2.imshow('mask_bleu', mask_bleu)
-    #cv2.imshow('mask_blanc', thresholded_image)
+    cv2.imshow('mask_blanc', thresholded_image)
+    cv2.imshow('mask_blanc', image_blanc)
     #cv2.imshow('mask_blanc2', mask_blanc)
     #cv2.imshow('mask_vert', mask_vert)
     #cv2.imshow('mask_jaune', mask_jaune)
     #cv2.imshow('mask_blanc', gray_image)
+
     if cv2.waitKey(1)==ord('q'):
         break
-cap.release()
+#cap.release()
 cv2.destroyAllWindows()
+
 
 
 #####     code pour les cubes blanc !!!
@@ -634,3 +659,8 @@ cv2.destroyAllWindows()
 ##cv2.waitKey(0)
 ##cv2.destroyAllWindows()
 ##
+
+
+
+
+
